@@ -92,28 +92,47 @@ int main()
 	// render loop
 	// -----------
 	glm::mat4 model, modelesquerda;
-	model = glm::translate(model, glm::vec3(0.0f, -1.00f, 0.0f)); // translate it down so it's at the center of the scene
-	model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1));	// it's a bit too big for our scene, so scale it down
-
-
-	modelesquerda = glm::translate(modelesquerda, glm::vec3(0.8f, -1.0f, 0.0f));
-	modelesquerda = glm::scale(modelesquerda, glm::vec3(0.1f, 0.1f, 0.1f));
+	glm::vec3 pinicial = glm::vec3(0.0f, -1.00f, 0.0f);
+	glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
+	glm::vec3 pfinal = pinicial;
+	model = glm::translate(model, pinicial); // translate it down so it's at the center of the scene
+	model = glm::scale(model, escalainicial);	// it's a bit too big for our scene, so scale it down 
+	//modelesquerda = glm::translate(modelesquerda, glm::vec3(0.8f, -1.0f, 0.0f));
+	//delesquerda = glm::scale(modelesquerda, glm::vec3(0.1f, 0.1f, 0.1f));
+	
 	float pontoinicial = 0.0f;
 	float t = 0.0f;
+	float delta = 0.0f;
+	glm::vec3 p;
 	while (!glfwWindowShouldClose(window))
 	{
-		//glm::vec3 aux = model;
-		//std::cout << glm::acos(glm::dot(camera.Position, )) << std::endl;
+		// a ideia seria que a cada 2s ele ande 0.2 no x exemplo, então em 10s ele vai dar 1 em x
+		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+			float firstTime= (float)glfwGetTime();
+			pfinal.x = (10 * 0.2) / 2;
+			while (t < 10.0f) {
+				float atualTime = (float)glfwGetTime();
+				delta = atualTime - firstTime;
+				t = t + delta;
+				p =( pinicial + (pfinal - pinicial) ) * (0.2 / t);
+				model = glm::translate(model, p);
+
+			}
+			t = 0.0f;
+		}
 		
+		//wireframe
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		// angulo da camera
+		std::cout << "angulo" << std::endl;
+		std::cout << glm::acos(glm::dot(camera.Position,pinicial )) << std::endl;
+		
 		// per-frame time logic
 		// --------------------
 		float currentFrame = glfwGetTime();
-		float timeA = glfwGetTime();
-		float delta = timeA - firstTime;
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
@@ -135,25 +154,6 @@ int main()
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
 
-		// render the loaded model
-		float pontofinal = (delta * distancia)/temp;
-		float p = pontoinicial + (pontofinal - pontoinicial)*(temp / t);
-
-		/*if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-			float tempoinicial = glfwGetTime();
-			float tempofinal = 10;
-
-			while (t != 10) {
-				float tempoatual = glfwGetTime();
-				t = tempoatual - tempoinicial;
-				model = glm::translate(model, glm::vec3(p, 0.00f, 0.0f));
-				ourShader.setMat4("model", model);
-				ourModel.Draw(ourShader);
-
-					
-			}
-			model = glm::translate(model, glm::vec3(p, 0.00f, 0.0f));*/
-		}
 		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 			model = glm::translate(model, glm::vec3(0.50f, 0.00f, 0.0f));
 		if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
