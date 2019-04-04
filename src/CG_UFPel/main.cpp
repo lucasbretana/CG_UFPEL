@@ -85,27 +85,44 @@ int main()
 	// -----------
 	Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
 
+	/* varios modelos
+	vector<Model> objs;
+	vector<int> model;
+	vector<glm::mat4> transform;
+	int n = 5,i = 0;
+	float position = 0.5;
+	for (i = 0; i < n; i++) {
+		model.push_back(i);
+		glm::mat4 mat;
+		mat = glm::translate(mat, glm::vec3((float)position, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		mat = glm::scale(mat, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down;
+		position += 0.5f;
+		transform.push_back(mat);
+		*/
 
-	// draw in wireframe
-
-
-	// render loop
-	// -----------
-	glm::mat4 model, modelesquerda;
+		// render loop
+		// -----------
 	glm::vec3 pinicial = glm::vec3(0.0f, -1.00f, 0.0f);
 	glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
 	glm::vec3 pfinal = pinicial;
+	glm::vec3 patual = pinicial;
+	glm::mat4 model;
 	model = glm::translate(model, pinicial); // translate it down so it's at the center of the scene
 	model = glm::scale(model, escalainicial);	// it's a bit too big for our scene, so scale it down 
 	//modelesquerda = glm::translate(modelesquerda, glm::vec3(0.8f, -1.0f, 0.0f));
 	//delesquerda = glm::scale(modelesquerda, glm::vec3(0.1f, 0.1f, 0.1f));
-	
+
 	float pontoinicial = 0.0f;
 	float t = 0.0f;
 	float delta = 0.0f;
 	glm::vec3 p;
 	while (!glfwWindowShouldClose(window))
 	{
+		//wireframe
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		// a ideia seria que a cada 2s ele ande 0.2 no x exemplo, então em 10s ele vai dar 1 em x
 		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
 			float firstTime= (float)glfwGetTime();
@@ -114,22 +131,24 @@ int main()
 				float atualTime = (float)glfwGetTime();
 				delta = atualTime - firstTime;
 				t = t + delta;
-				p =( pinicial + (pfinal - pinicial) ) * (0.2 / t);
-				model = glm::translate(model, p);
+				if(t!=0.0f)
+					patual.x =( pinicial.x) + ((0.2*t) / 2);
+				else
+					patual.x = (pinicial.x) + 0.2;
+				model = glm::translate(model, patual);
+				glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				ourShader.setMat4("model", model);
+				ourModel.Draw(ourShader);
 
 			}
 			t = 0.0f;
 		}
-		
-		//wireframe
-		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 		// angulo da camera
 		std::cout << "angulo" << std::endl;
 		std::cout << glm::acos(glm::dot(camera.Position,pinicial )) << std::endl;
-		
+
 		// per-frame time logic
 		// --------------------
 		float currentFrame = glfwGetTime();
@@ -163,7 +182,11 @@ int main()
 		//ourShader.setMat4("model", modelesquerda);
 		//ourModel.Draw(ourShader);
 
-
+		/*(for (int i = 0; i < n; ++i) {
+			// render the loaded model
+			ourShader.setMat4("model", transform[i]);
+			ourModel.Draw(ourShader);
+		}*/
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
