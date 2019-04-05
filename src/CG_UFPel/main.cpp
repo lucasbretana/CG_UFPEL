@@ -122,15 +122,17 @@ int main()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		// a ideia seria que a cada 2s ele ande 0.2 no x exemplo, então em 10s ele vai dar 1 em x
+		// animação em função do tempo
 		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+			delta = 0;
 			double firstTime= glfwGetTime();
-			pfinal.x = (10 * 0.5);
 			while (delta < 2) {
+				if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+					break;
 				double atualTime = glfwGetTime();
 				delta = atualTime - firstTime;
 				if (delta != 0) {
-					patual.x = (float)((0.05*delta) / 5);
+					patual.x = (float)((0.01*delta) / 2);
 					patual.y = 0.0f;
 					patual.z = 0.0f;
 					model = glm::translate(model, patual);
@@ -146,11 +148,37 @@ int main()
 
 			}
 		}
+		float rotacao = 10.0f;
+		delta = 0;
+		if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+			double firstTime = glfwGetTime();
+			while (delta < 2) {
+				if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+					break;
+
+				double atualTime = glfwGetTime();
+				delta = atualTime - firstTime;
+				if (delta != 0) {
+					model = glm::rotate(model, (float)glfwGetTime(), patual);
+					ourShader.setMat4("model", model);
+					ourModel.Draw(ourShader);
+
+					glfwSwapBuffers(window);
+					glfwPollEvents();
+				}
+
+				glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			}
+
+		}
 		
 		// angulo da camera
 
 		std::cout << "angulo" << std::endl;
-		std::cout << glm::acos(glm::dot(camera.Position,pinicial )) << std::endl;
+		glm::vec3 direct = glm::normalize(camera.Position - patual);
+		std::cout << direct.x <<""<< direct.z << std::endl;
 
 		// per-frame time logic
 		// --------------------
