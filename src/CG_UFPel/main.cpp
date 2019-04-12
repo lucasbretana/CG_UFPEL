@@ -11,7 +11,7 @@
 #include <learnopengl/model.h>
 
 #include <iostream>
-
+#include <glm/gtx/spline.hpp>
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -85,20 +85,6 @@ int main()
 	// -----------
 	Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
 
-	/* varios modelos
-	vector<Model> objs;
-	vector<int> model;
-	vector<glm::mat4> transform;
-	int n = 5,i = 0;
-	float position = 0.5;
-	for (i = 0; i < n; i++) {
-		model.push_back(i);
-		glm::mat4 mat;
-		mat = glm::translate(mat, glm::vec3((float)position, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		mat = glm::scale(mat, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down;
-		position += 0.5f;
-		transform.push_back(mat);
-		*/
 
 		// render loop
 		// -----------
@@ -106,33 +92,36 @@ int main()
 	glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
 	glm::vec3 pfinal = pinicial;
 	glm::vec3 patual = pinicial;
+	glm::vec3 pontorotacao;
 	glm::mat4 model;
 	model = glm::translate(model, pinicial); // translate it down so it's at the center of the scene
-	model = glm::scale(model, escalainicial);	// it's a bit too big for our scene, so scale it down 
-	//modelesquerda = glm::translate(modelesquerda, glm::vec3(0.8f, -1.0f, 0.0f));
-	//delesquerda = glm::scale(modelesquerda, glm::vec3(0.1f, 0.1f, 0.1f));
-
+	model = glm::scale(model, escalainicial);
 	float pontoinicial = 0.0f;
 	double delta = 0;
 	glm::vec3 p;
+	double atualTime=0.0;
+	double firstTime =0.0;
+	float valor =0.0f;
 	while (!glfwWindowShouldClose(window))
 	{
+		delta = 0;
 		//wireframe
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		// animação em função do tempo
+
+		//Animação para esquerda em função do tempo
 		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
 			delta = 0;
-			double firstTime= glfwGetTime();
-			while (delta < 2) {
+		 	firstTime= glfwGetTime();
+			while (delta < 5) {
 				if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
 					break;
-				double atualTime = glfwGetTime();
+				 atualTime = glfwGetTime();
 				delta = atualTime - firstTime;
 				if (delta != 0) {
-					patual.x = (float)((0.01*delta) / 2);
+					patual.x = (float)((0.1*delta) / 2);
 					patual.y = 0.0f;
 					patual.z = 0.0f;
 					model = glm::translate(model, patual);
@@ -148,18 +137,18 @@ int main()
 
 			}
 		}
-		float rotacao = 10.0f;
 		delta = 0;
+		// Animação de rotação em função do tempo
 		if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
 			double firstTime = glfwGetTime();
-			while (delta < 2) {
+			while (delta < 10) {
 				if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
 					break;
-
 				double atualTime = glfwGetTime();
 				delta = atualTime - firstTime;
 				if (delta != 0) {
-					model = glm::rotate(model, (float)glfwGetTime(), patual);
+					valor = ((1*delta) / 2);
+					model = glm::rotate(model, glm::radians(valor), patual);
 					ourShader.setMat4("model", model);
 					ourModel.Draw(ourShader);
 
@@ -210,15 +199,7 @@ int main()
 			model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, -1.00f, 0.0f));
 		ourShader.setMat4("model", model);
 		ourModel.Draw(ourShader);
-		//ourShader.setMat4("model", modelesquerda);
-		//ourModel.Draw(ourShader);
-
-		/*(for (int i = 0; i < n; ++i) {
-			// render the loaded model
-			ourShader.setMat4("model", transform[i]);
-			ourModel.Draw(ourShader);
-		}*/
-
+		
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
