@@ -93,7 +93,9 @@ int main()
 	glm::vec3 pfinal = pinicial;
 	glm::vec3 patual = pinicial;
 	glm::vec3 pontorotacao;
+
 	glm::mat4 model;
+
 	model = glm::translate(model, pinicial); // translate it down so it's at the center of the scene
 	model = glm::scale(model, escalainicial);
 	float pontoinicial = 0.0f;
@@ -102,9 +104,45 @@ int main()
 	double atualTime=0.0;
 	double firstTime =0.0;
 	float valor =0.0f;
+	double current_t = 0.0;
+	bool playAnimation = false;
+	const double lapse = 5.0; //tempo da animação: 5 segundos
+	glm::vec3 position; //posição atual
+
+	//parâmetros da curva
+	glm::vec3 	pA = pinicial,
+				pB = glm::vec3(-0.9f, -1.00f, 0.0f),
+				pC = glm::vec3(0.0f, -1.00f, 0.2f),
+				pD = glm::vec3(0.5f, -1.00f, 0.6f);
+	float s = 0.0f; //parâmetro da curva análogo ao t da reta
+	double delta_t = 0.0;
+	double first_t = 0.0; //tempo inicial
 	while (!glfwWindowShouldClose(window))
 	{
 		delta = 0;
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		{
+			playAnimation = true;
+			position = pinicial;
+			first_t = glfwGetTime();
+		}
+		if(playAnimation)
+		{
+			if(delta_t < lapse)
+			{
+				delta_t += glfwGetTime() - first_t;
+				s = lapse / delta_t;
+				position = glm::catmullRom(pA, pB, pC, pD, s) - position;
+				model = glm::translate(model, position);
+			}
+			else
+			{
+				s = 0.0f;
+				delta_t = 0.0;
+				current_t = 0.0;
+				playAnimation = false;
+			}
+		}
 		//wireframe
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -115,7 +153,7 @@ int main()
 		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
 			delta = 0;
 		 	firstTime= glfwGetTime();
-			while (delta < 5) {
+			while (delta < 3) {
 				if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
 					break;
 				 atualTime = glfwGetTime();
@@ -137,6 +175,9 @@ int main()
 
 			}
 		}
+		// rotacao por eixo colocar 1 no eixo quer quer girars
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) 
+			model = glm::rotate(model, glm::radians(1.0f),  glm::vec3(0.0f, 0.f, 1.0f));
 		delta = 0;
 		// Animação de rotação em função do tempo
 		if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
