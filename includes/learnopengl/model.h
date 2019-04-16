@@ -12,7 +12,7 @@
 
 #include <learnopengl/mesh.h>
 #include <learnopengl/shader.h>
-
+#include <glm/gtx/spline.hpp>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -27,18 +27,199 @@ class Model
 {
 public:
     /*  Model Data */
-    vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+    vector<Texture> textures_loaded;    // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
-
+    vector <glm::mat4> objs;
+    vector <glm::vec3> transformations;
+    glm::vec3 pinicial = glm::vec3(0.0f, -1.0f, 0.0f);
+     glm::vec3 patual = pinicial;
+    glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
+    double delta_t=0.6f;
+    float s = 0.0f; //parâmetro da curva análogo ao t da reta
+    double first_t = 0.0;
+    double atual_t = 0.0; //tempo inicial
+    int i=0,j,objeto_corrente=0;
+    double temp;
+    const double lapse = 5.0;
+    bool playAnimation = false;
+    double current_t = 0.0;
+    double  delta_rot =0.0;
+    float bezi =0.0f;
+    
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
     {
         loadModel(path);
     }
+    double retornaDelta(){
+        return delta_t;
+    }
+    
+    void roda(int duracao,glm::vec3 p,GLFWwindow* window,Shader ourshader){
+            delta_rot =0;
+            double firstTime = glfwGetTime();
+            while (delta_rot < duracao) {
+                if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+                    break;
+                atual_t = glfwGetTime();
+                delta_rot = atual_t - first_t;
+                if (delta_rot != 0) {
+                    double valor = ((0.3*delta_rot) / 1);
+                    if(p.x==0 && p.y==0 && p.z==0){
+                        
+                        objs[objeto_corrente] = glm::rotate(objs[objeto_corrente], glm::radians((float)valor), glm::vec3(0.0f,1.0f,0.0f));
+                    }else{
+                        objs[objeto_corrente] = glm::rotate(objs[objeto_corrente], glm::radians(1.0f), p);
+                         
+                    }
+                    ourshader.setMat4("model", objs[objeto_corrente]);
+                    Draw(ourshader);
 
+                    glfwSwapBuffers(window);
+                    glfwPollEvents();
+                }
+
+                glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            }
+    }
+    void bezier(){
+        glm::vec3   pA = pinicial,
+                pB = glm::vec3(objs[objeto_corrente][0][0],objs[objeto_corrente][1][1]-5 , objs[objeto_corrente][2][2]),
+                pC = glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1], objs[objeto_corrente][0][0]),
+                pD = glm::vec3(objs[objeto_corrente][0][0] + 1.0, objs[objeto_corrente][1][1],objs[objeto_corrente][2][2]);
+        if (bezi <= 1.0) {
+            glm::vec3 b = glm::catmullRom(pA, pB, pC, pD,bezi);
+            objs[objeto_corrente] = glm::translate(objs[objeto_corrente], b);
+            bezi += 0.001;
+        }else {
+            bezi = 0.0;
+        }
+    }
+     void rodaemponto(glm::vec3 p){
+       glm::vec3 curPoint( objs[objeto_corrente][0][0],  objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]);
+        glm::mat4 aux;
+         objs[objeto_corrente] = glm::translate(aux, p);
+         objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+         objs[objeto_corrente] = glm::translate( objs[objeto_corrente], curPoint);
+          //objs[objeto_corrente] = glm::scale(objs[objeto_corrente],curPoint);
+
+     }
+    void rodanoeixo(int duracao,GLFWwindow* window,Shader ourshader,int eixo){
+        while (delta_rot < duracao) {
+            if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+                break;
+            atual_t = glfwGetTime();
+            delta_rot = atual_t - first_t;
+            if (delta_rot != 0) {
+                double valor = ((0.8*delta_rot) / 1);
+                if(eixo==1)
+                  objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians((float)valor),  glm::vec3(1.0f, 0.0f, 0.0f));
+                else if(eixo==2)
+                  objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians((float)valor),  glm::vec3(0.0f, 1.0f, 0.0f));
+                else if(eixo==3)
+                    objs[objeto_corrente] =  glm::rotate( objs[objeto_corrente],glm::radians((float)valor),  glm::vec3(0.0f, 0.0f, 1.0f));
+                ourshader.setMat4("model", objs[objeto_corrente]);
+                Draw(ourshader);
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+            }
+            glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            }
+
+    }
+    void escala(GLFWwindow* window,Shader ourshader,float x,int verifica){
+        if(verifica==0)
+            objs[objeto_corrente] = glm::scale( objs[objeto_corrente], glm::vec3(x,x,x));
+        else
+            objs[objeto_corrente] = glm::scale( objs[objeto_corrente], glm::vec3(-x,-x,-x));
+    }
+    void adicionaObjeto(){
+        atual_t= glfwGetTime();
+                delta_t =0.0f;
+                pinicial = glm::vec3(s, -8.00f, 0.0f);
+                s +=2;
+                pinicial.x=s;
+                objs.push_back( glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f)), pinicial));
+                transformations.push_back( pinicial);
+                i++;
+    }
+     glm::mat4 translacao(glm::mat4 model,glm::vec3 patual){
+        return glm::translate(model,patual);
+
+    }
+    void translat(int duracao,Shader ourshader,GLFWwindow* window){
+        temp = 0;
+           //  std::cout<<"pontos:"<< " "<< objeto_corrente << std::endl; 
+            first_t = glfwGetTime();
+            while (temp < duracao) {
+                if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+                    break;
+                 atual_t = glfwGetTime();
+                temp = atual_t - first_t;
+                if (temp!=0) {
+                    patual.x = (float)((0.1*temp) / 2);
+                    patual.y = 0.0f;
+                    patual.z = 0.0f;
+                    objs[objeto_corrente] = glm::translate(objs[objeto_corrente],patual);
+                    ourshader.setMat4("model", objs[objeto_corrente]);
+                    Draw(ourshader);                   
+                    glfwSwapBuffers(window);
+                    glfwPollEvents();
+                }
+                glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            }
+    }
+   glm::vec3 calculoponto(){
+    glm::vec3 aux;
+    if(objeto_corrente>=0){
+       glm::vec3 aux(objs[objeto_corrente][3][0],objs[objeto_corrente][3][1],objs[objeto_corrente][3][2]);
+    }
+    
+    else
+       glm::vec3 aux(0.0f,0.0f,0.0f);
+    return aux;
+   }
+    void trocaObjetoMax(){
+            atual_t= glfwGetTime();
+            delta_t =0.0f;
+            if(objeto_corrente < i)
+                objeto_corrente++;
+            else
+                objeto_corrente= i-1;
+    }
+    void trocaObjetoMin(){
+        atual_t= glfwGetTime();
+            delta_t =0.0f;
+            if(objeto_corrente > 0)
+                objeto_corrente--;
+            else
+                objeto_corrente=0;
+    }
+    int calculoDelta(){
+        delta_t += glfwGetTime() - atual_t;
+    }
+    void rodaobjetoespecifico(){
+        objs[objeto_corrente] = glm::rotate(objs[objeto_corrente], glm::radians(1.0f),  glm::vec3(0.0f, 0.f, 1.0f));
+    }
+    void desenha(Shader ourshader){
+        if(i>0){
+            for (j=0; j < objs.size(); ++j)
+            {
+                ourshader.setMat4("model", objs[j]);
+                Draw(ourshader);
+
+            }
+        }
+    }
     // draws the model, and thus all its meshes
     void Draw(Shader shader)
     {

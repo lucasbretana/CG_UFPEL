@@ -84,131 +84,75 @@ int main()
 	// load models
 	// -----------
 	Model ourModel(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
+	//Model novo(FileSystem::getPath("resources/objects/rock/rock.obj"));
 
 
 		// render loop
-		// -----------
-	glm::vec3 pinicial = glm::vec3(0.0f, -1.00f, 0.0f);
-	glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
-	glm::vec3 pfinal = pinicial;
-	glm::vec3 patual = pinicial;
-	glm::vec3 pontorotacao;
-
-	glm::mat4 model;
-
-	model = glm::translate(model, pinicial); // translate it down so it's at the center of the scene
-	model = glm::scale(model, escalainicial);
-	float pontoinicial = 0.0f;
-	double delta = 0;
-	glm::vec3 p;
 	double atualTime=0.0;
 	double firstTime =0.0;
-	float valor =0.0f;
-	double current_t = 0.0;
-	bool playAnimation = false;
-	const double lapse = 5.0; //tempo da animação: 5 segundos
-	glm::vec3 position; //posição atual
-
-	//parâmetros da curva
-	glm::vec3 	pA = pinicial,
-				pB = glm::vec3(-0.9f, -1.00f, 0.0f),
-				pC = glm::vec3(0.0f, -1.00f, 0.2f),
-				pD = glm::vec3(0.5f, -1.00f, 0.6f);
-	float s = 0.0f; //parâmetro da curva análogo ao t da reta
-	double delta_t = 0.0;
-	double first_t = 0.0; //tempo inicial
+	glm::mat4 model;
+	glm::vec3 inicial = glm::vec3(-2.0f, -1.0f, 0.0f);
+    glm::vec3 einicial = glm::vec3(0.1f, 0.1f, 0.1f);
+	//parÃ¢metros da curva
+	double delt;
+	//vector<Model> models;
 	while (!glfwWindowShouldClose(window))
 	{
-		delta = 0;
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		{
-			playAnimation = true;
-			position = pinicial;
-			first_t = glfwGetTime();
-		}
-		if(playAnimation)
-		{
-			if(delta_t < lapse)
-			{
-				delta_t += glfwGetTime() - first_t;
-				s = lapse / delta_t;
-				position = glm::catmullRom(pA, pB, pC, pD, s) - position;
-				model = glm::translate(model, position);
-			}
-			else
-			{
-				s = 0.0f;
-				delta_t = 0.0;
-				current_t = 0.0;
-				playAnimation = false;
-			}
-		}
+		//glm::vec3 pont = ourModel.calculoponto();
+		//camera.angulocamera(pont);
+		
+
+		ourModel.calculoDelta();
+
 		//wireframe
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-		//Animação para esquerda em função do tempo
-		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-			delta = 0;
-		 	firstTime= glfwGetTime();
-			while (delta < 3) {
-				if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-					break;
-				 atualTime = glfwGetTime();
-				delta = atualTime - firstTime;
-				if (delta != 0) {
-					patual.x = (float)((0.1*delta) / 2);
-					patual.y = 0.0f;
-					patual.z = 0.0f;
-					model = glm::translate(model, patual);
-					ourShader.setMat4("model", model);
-					ourModel.Draw(ourShader);
-					
-					glfwSwapBuffers(window);
-					glfwPollEvents();
-				}
-				
-				glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			}
+		//adicionaobjeto
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f)
+		{
+			ourModel.adicionaObjeto();
+	
 		}
-		// rotacao por eixo colocar 1 no eixo quer quer girars
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) 
-			model = glm::rotate(model, glm::radians(1.0f),  glm::vec3(0.0f, 0.f, 1.0f));
-		delta = 0;
-		// Animação de rotação em função do tempo
-		if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-			double firstTime = glfwGetTime();
-			while (delta < 10) {
-				if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-					break;
-				double atualTime = glfwGetTime();
-				delta = atualTime - firstTime;
-				if (delta != 0) {
-					valor = ((1*delta) / 2);
-					model = glm::rotate(model, glm::radians(valor), patual);
-					ourShader.setMat4("model", model);
-					ourModel.Draw(ourShader);
-
-					glfwSwapBuffers(window);
-					glfwPollEvents();
-				}
-
-				glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			}
-
-		}
+		//rodar por ponto
 		
-		// angulo da camera
+		if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+			glm::vec3 p(-2.5f,1.0f,-2.0f);
+			ourModel.roda(10,p,window,ourShader);
+		}
+		//troca de modelos
+		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f){
+			ourModel.trocaObjetoMax();
+		}
+		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f){
+			ourModel.trocaObjetoMin();
+		}
+		//AnimaÃ§Ã£o translaÃ§Ã£o
+		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+			ourModel.translat(3,ourShader,window);
 
-		std::cout << "angulo" << std::endl;
-		glm::vec3 direct = glm::normalize(camera.Position - patual);
-		std::cout << direct.x <<""<< direct.z << std::endl;
+		}
+		//rodaobjetoespecifico
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+			//ourModel.rodaobjetoespecifico();
+		}
+		// roda em tornoo do ponto 
+		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
+			glm::vec3 ponto(0.5f, 0.5f, 0.5f);
+			ourModel.rodaemponto(ponto);
+		}
+		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){
+			ourModel.bezier();
+		}
+		//escala
+		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS){
+			ourModel.escala(window,ourShader,0.8f,1);
+		}
+		if(glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f){
+			ourModel.rodanoeixo(10,window,ourShader,1);
+		}
 
 		// per-frame time logic
 		// --------------------
@@ -216,7 +160,12 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		// input
+
+		//model = glm::translate(model, inicial); // translate it down so it's at the center of the scene
+       // model = glm::scale(model,einicial);
+		//ourShader.setMat4("model", model);
+		//novo.Draw(ourShader);
+		// input22
 		// -----
 		processInput(window);
 
@@ -233,13 +182,9 @@ int main()
 		glm::mat4 view = camera.GetViewMatrix();
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
+		
 
-		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
-			model = glm::translate(model, glm::vec3(0.50f, 0.00f, 0.0f));
-		if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
-			model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, -1.00f, 0.0f));
-		ourShader.setMat4("model", model);
-		ourModel.Draw(ourShader);
+		ourModel.desenha(ourShader);
 		
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -259,7 +204,8 @@ void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-
+	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		camera.AnimationCam(deltaTime,4);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera.ProcessKeyboard(FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -282,6 +228,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
+// Zoom
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	if (firstMouse)
