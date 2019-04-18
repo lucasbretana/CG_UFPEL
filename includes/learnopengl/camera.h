@@ -50,6 +50,11 @@ public:
         Pitch = pitch;
         updateCameraVectors();
     }
+    void angulocamera(glm::vec3 patual){
+        std::cout << "angulo" << std::endl;
+        glm::vec3 direct = glm::normalize(Position - patual);
+        std::cout<<"X:" << direct.x <<" Y:"<< direct.y<<" Z:"<< direct.z << std::endl;
+    }
     // Constructor with scalar values
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
@@ -63,9 +68,21 @@ public:
     // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
     glm::mat4 GetViewMatrix()
     {
+       // std::cout<<"front x " << Front.x << "front y " << Front.y << "front z " << Front.z << std::endl;
         return glm::lookAt(Position, Position + Front, Up);
-    }
 
+    }
+    glm::mat4 olhaPonto(glm::vec3 ponto)
+    {
+        Position -= Right + ponto; 
+        updateCameraVectors();
+         return glm::lookAt(Position, Position + Front, Up);
+    }
+    void trocaFront(glm::vec3 novo){
+        Position = novo;
+        updateCameraVectors();
+
+    }
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
@@ -78,6 +95,23 @@ public:
             Position -= Right * velocity;
         if (direction == RIGHT)
             Position += Right * velocity;
+    }
+    void AnimationCam(float temp,double duracao){
+            double delta_t=temp;
+            double final=0.0;
+            float lF = 0.0f;
+            float dT = 0.0f; 
+            double first = glfwGetTime();
+            while (final < duracao) {
+                double atualt= glfwGetTime();
+                final = atualt - first;
+               float cF = glfwGetTime();
+                dT = cF - lF;
+                lF = cF;
+                float velocity = MovementSpeed * dT;
+                Position -= Front  * velocity;
+               // updateCameraVectors();
+            }
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.

@@ -33,7 +33,7 @@ public:
     bool gammaCorrection;
     vector <glm::mat4> objs;
     vector <glm::vec3> transformations;
-    glm::vec3 pinicial = glm::vec3(0.0f, -1.0f, 0.0f);
+    glm::vec3 pinicial = glm::vec3(0.0f, 0.0f, 0.0f);
      glm::vec3 patual = pinicial;
     glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
     double delta_t=0.6f;
@@ -88,25 +88,37 @@ public:
             }
     }
     void bezier(){
-        glm::vec3   pA = pinicial,
-                pB = glm::vec3(objs[objeto_corrente][0][0],objs[objeto_corrente][1][1]-5 , objs[objeto_corrente][2][2]),
-                pC = glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1], objs[objeto_corrente][0][0]),
-                pD = glm::vec3(objs[objeto_corrente][0][0] + 1.0, objs[objeto_corrente][1][1],objs[objeto_corrente][2][2]);
         if (bezi <= 1.0) {
-            glm::vec3 b = glm::catmullRom(pA, pB, pC, pD,bezi);
-            objs[objeto_corrente] = glm::translate(objs[objeto_corrente], b);
+             std::cout<< "matriz"<< std::endl;
+             for (int k = 0; k < 3; ++k)
+             {
+                for (int l = 0; i < 3; ++k)
+                {
+                    std::cout<< "pos["<<k<<"]"<<"["<<l<<"]="<<objs[objeto_corrente][k][l]<< std::endl;
+                }
+             }
+           glm::vec3 b = catmullRom(
+            glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]+1),
+                glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1]-2, objs[objeto_corrente][0][0]),
+                glm::vec3(objs[objeto_corrente][0][0] + 2.5, objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]-1),
+                glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]),bezi);
+            objs[objeto_corrente][3][0] = b.x;
+            objs[objeto_corrente][3][1] = b.y;
+            objs[objeto_corrente][3][2] = b.z;
             bezi += 0.001;
         }else {
             bezi = 0.0;
         }
     }
      void rodaemponto(glm::vec3 p){
-       glm::vec3 curPoint( objs[objeto_corrente][0][0],  objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]);
+       glm::vec3 anterior( objs[objeto_corrente][0][0],  objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]);
         glm::mat4 aux;
          objs[objeto_corrente] = glm::translate(aux, p);
          objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-         objs[objeto_corrente] = glm::translate( objs[objeto_corrente], curPoint);
+         objs[objeto_corrente] = glm::translate( objs[objeto_corrente], anterior);
           //objs[objeto_corrente] = glm::scale(objs[objeto_corrente],curPoint);
+          //
+          
 
      }
     void rodanoeixo(int duracao,GLFWwindow* window,Shader ourshader,int eixo){
@@ -123,8 +135,7 @@ public:
                   objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians((float)valor),  glm::vec3(0.0f, 1.0f, 0.0f));
                 else if(eixo==3)
                     objs[objeto_corrente] =  glm::rotate( objs[objeto_corrente],glm::radians((float)valor),  glm::vec3(0.0f, 0.0f, 1.0f));
-                ourshader.setMat4("model", objs[objeto_corrente]);
-                Draw(ourshader);
+               desenha(ourshader);
                 glfwSwapBuffers(window);
                 glfwPollEvents();
             }
@@ -134,7 +145,8 @@ public:
             }
 
     }
-    void escala(GLFWwindow* window,Shader ourshader,float x,int verifica){
+    void escala(float x,int verifica){
+     // x = x + objs[objeto_corrente][0][0];
         if(verifica==0)
             objs[objeto_corrente] = glm::scale( objs[objeto_corrente], glm::vec3(x,x,x));
         else
@@ -147,36 +159,39 @@ public:
                 s +=2;
                 pinicial.x=s;
                 objs.push_back( glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f)), pinicial));
-                transformations.push_back( pinicial);
-                i++;
+                //transformations.push_back( pinicial);
+                ++i;
     }
      glm::mat4 translacao(glm::mat4 model,glm::vec3 patual){
         return glm::translate(model,patual);
 
     }
-    void translat(int duracao,Shader ourshader,GLFWwindow* window){
-        temp = 0;
+    void translat(int temp,Shader ourshader,GLFWwindow* window){
+      //  temp = 0;
            //  std::cout<<"pontos:"<< " "<< objeto_corrente << std::endl; 
-            first_t = glfwGetTime();
-            while (temp < duracao) {
-                if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-                    break;
-                 atual_t = glfwGetTime();
-                temp = atual_t - first_t;
+        //    first_t = glfwGetTime();
+          //  while (temp < duracao) {
+            //    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+              //      break;
+                // atual_t = glfwGetTime();
+                //temp = atual_t - first_t;
                 if (temp!=0) {
                     patual.x = (float)((0.1*temp) / 2);
                     patual.y = 0.0f;
                     patual.z = 0.0f;
                     objs[objeto_corrente] = glm::translate(objs[objeto_corrente],patual);
-                    ourshader.setMat4("model", objs[objeto_corrente]);
-                    Draw(ourshader);                   
-                    glfwSwapBuffers(window);
-                    glfwPollEvents();
+                    //ourshader.setMat4("model", objs[objeto_corrente]);
+                    //Draw(ourshader);                   
+                    //glfwSwapBuffers(window);
+                    //glfwPollEvents();
                 }
-                glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                //glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+                //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            }
+            //}
+    }
+    glm::vec3 retornaPositionObj(){
+        return glm::vec3(objs[objeto_corrente][3][0],objs[objeto_corrente][3][1],objs[objeto_corrente][3][2]);
     }
    glm::vec3 calculoponto(){
     glm::vec3 aux;
@@ -192,7 +207,7 @@ public:
             atual_t= glfwGetTime();
             delta_t =0.0f;
             if(objeto_corrente < i)
-                objeto_corrente++;
+                ++objeto_corrente;
             else
                 objeto_corrente= i-1;
     }
@@ -200,12 +215,15 @@ public:
         atual_t= glfwGetTime();
             delta_t =0.0f;
             if(objeto_corrente > 0)
-                objeto_corrente--;
+                --objeto_corrente;
             else
                 objeto_corrente=0;
     }
     int calculoDelta(){
         delta_t += glfwGetTime() - atual_t;
+    }
+    void o(){
+        std::cout<<"X:" << objs[objeto_corrente][0][1] << std::endl;
     }
     void rodaobjetoespecifico(){
         objs[objeto_corrente] = glm::rotate(objs[objeto_corrente], glm::radians(1.0f),  glm::vec3(0.0f, 0.f, 1.0f));
