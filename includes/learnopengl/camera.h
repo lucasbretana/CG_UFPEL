@@ -16,8 +16,8 @@ enum Camera_Movement {
 };
 
 // Default camera values
-const float YAW         = -90.0f;
-const float PITCH       =  0.0f;
+const float YAW         = -90.0f; //Y
+const float PITCH       =  0.0f; //X
 const float SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
 const float ZOOM        =  45.0f;
@@ -72,16 +72,36 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
 
     }
-    glm::mat4 olhaPonto(glm::vec3 ponto)
+    void acompanha(glm::vec3 ponto,float deltaTime){
+        deltaTime = deltaTime / 500  ;
+        float velocity = MovementSpeed * deltaTime;
+        Position -= (Right * velocity); 
+
+    }
+    glm::mat4 trocaLook(glm::vec3 ponto)
     {
-        Position -= Right + ponto; 
-        updateCameraVectors();
-         return glm::lookAt(Position, Position + Front, Up);
+        //Position -= Right + ponto; 
+        //updateCameraVectors();
+         return glm::lookAt(Position, ponto, Up);
     }
     void trocaFront(glm::vec3 novo){
         Position = novo;
         updateCameraVectors();
 
+    }
+    glm::mat4 rodaEixo(int eixo,float delta_rot){
+        glm::mat4 view;
+        if (delta_rot != 0) {
+                double valor = ((0.8*delta_rot) / 1);
+                if(eixo==1)
+                    view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(1.0f, 0.0f, 0.0f) );
+                else if(eixo==2)
+                   view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(0.0f, 1.0f, 0.0f) );
+                else if(eixo==3)
+                     view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(0.0f, 0.0f, 1.0f) );
+               
+            }
+            return view;
     }
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
@@ -110,7 +130,7 @@ public:
                 lF = cF;
                 float velocity = MovementSpeed * dT;
                 Position -= Front  * velocity;
-               // updateCameraVectors();
+               updateCameraVectors();
             }
     }
 

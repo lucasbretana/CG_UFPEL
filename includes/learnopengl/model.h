@@ -89,16 +89,9 @@ public:
     }
     void bezier(){
         if (bezi <= 1.0) {
-             std::cout<< "matriz"<< std::endl;
-             for (int k = 0; k < 3; ++k)
-             {
-                for (int l = 0; i < 3; ++k)
-                {
-                    std::cout<< "pos["<<k<<"]"<<"["<<l<<"]="<<objs[objeto_corrente][k][l]<< std::endl;
-                }
-             }
+            
            glm::vec3 b = catmullRom(
-            glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]+1),
+            glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1]-3, objs[objeto_corrente][2][2]),
                 glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1]-2, objs[objeto_corrente][0][0]),
                 glm::vec3(objs[objeto_corrente][0][0] + 2.5, objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]-1),
                 glm::vec3(objs[objeto_corrente][0][0], objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]),bezi);
@@ -110,23 +103,26 @@ public:
             bezi = 0.0;
         }
     }
-     void rodaemponto(glm::vec3 p){
-       glm::vec3 anterior( objs[objeto_corrente][0][0],  objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]);
-        glm::mat4 aux;
-         objs[objeto_corrente] = glm::translate(aux, p);
-         objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-         objs[objeto_corrente] = glm::translate( objs[objeto_corrente], anterior);
+     void rodaemponto(glm::vec3 p,Shader ourshader,GLFWwindow* window){
+       //glm::vec3 anterior( objs[objeto_corrente][0][0],  objs[objeto_corrente][1][1], objs[objeto_corrente][2][2]);
+       // glm::mat4 aux;s
+
+          glm::rotate( objs[objeto_corrente], glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+           glm::rotate( objs[objeto_corrente], glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+           glm::rotate( objs[objeto_corrente], glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+         //objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 0.0f));
+         glm::translate( objs[objeto_corrente],p);
           //objs[objeto_corrente] = glm::scale(objs[objeto_corrente],curPoint);
           //
+        //objs[objeto_corrente] = glm::scale(objs[objeto_corrente],glm::vec3(0.1f,0.1f,0.1f));
+        ourshader.setMat4("model", objs[objeto_corrente]);
+        Draw(ourshader);                   
+        glfwSwapBuffers(window);
+        glfwPollEvents();
           
 
      }
-    void rodanoeixo(int duracao,GLFWwindow* window,Shader ourshader,int eixo){
-        while (delta_rot < duracao) {
-            if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-                break;
-            atual_t = glfwGetTime();
-            delta_rot = atual_t - first_t;
+    void rodanoeixo(int delta_rot,GLFWwindow* window,Shader ourshader,int eixo){
             if (delta_rot != 0) {
                 double valor = ((0.8*delta_rot) / 1);
                 if(eixo==1)
@@ -135,13 +131,6 @@ public:
                   objs[objeto_corrente] = glm::rotate( objs[objeto_corrente], glm::radians((float)valor),  glm::vec3(0.0f, 1.0f, 0.0f));
                 else if(eixo==3)
                     objs[objeto_corrente] =  glm::rotate( objs[objeto_corrente],glm::radians((float)valor),  glm::vec3(0.0f, 0.0f, 1.0f));
-               desenha(ourshader);
-                glfwSwapBuffers(window);
-                glfwPollEvents();
-            }
-            glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
             }
 
     }
@@ -222,9 +211,6 @@ public:
     int calculoDelta(){
         delta_t += glfwGetTime() - atual_t;
     }
-    void o(){
-        std::cout<<"X:" << objs[objeto_corrente][0][1] << std::endl;
-    }
     void rodaobjetoespecifico(){
         objs[objeto_corrente] = glm::rotate(objs[objeto_corrente], glm::radians(1.0f),  glm::vec3(0.0f, 0.f, 1.0f));
     }
@@ -232,6 +218,7 @@ public:
         if(i>0){
             for (j=0; j < objs.size(); ++j)
             {
+              //  objs[j] = glm::scale(objs[j], glm::vec3(0.1f, 0.1f, 0.1f)); 
                 ourshader.setMat4("model", objs[j]);
                 Draw(ourshader);
 
