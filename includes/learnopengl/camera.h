@@ -72,11 +72,33 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
 
     }
-    void acompanha(glm::vec3 ponto,float deltaTime){
+    void linearAnimation(glm::vec3 ponto,float deltaTime){
         deltaTime = deltaTime / 500  ;
         float velocity = MovementSpeed * deltaTime;
-        Position -= (Right * velocity); 
+        Position += (Right * velocity); 
 
+    }
+    glm::mat4 segue(glm::vec3 ponto){
+       return glm::lookAt(Position, ponto, Up);
+
+    }
+        void aumentaZoom()
+    {
+        if (Zoom >= 1.0f && Zoom <= 45.0f)
+            Zoom -= 0.5;
+        if (Zoom <= 1.0f)
+            Zoom = 1.0f;
+        if (Zoom >= 45.0f)
+            Zoom = 45.0f;
+    }
+    void diminuiZoom()
+    {
+        if (Zoom >= 1.0f && Zoom <= 45.0f)
+            Zoom += 0.5;
+        if (Zoom <= 1.0f)
+            Zoom = 1.0f;
+        if (Zoom >= 45.0f)
+            Zoom = 45.0f;
     }
     glm::mat4 trocaLook(glm::vec3 ponto)
     {
@@ -89,9 +111,20 @@ public:
         updateCameraVectors();
 
     }
-    glm::mat4 rodaEixo(int eixo,float delta_rot){
-        glm::mat4 view;
-        if (delta_rot != 0) {
+    glm::mat4 rodaEixo(float t){
+        
+         Yaw   += t;
+    Pitch += t*2;
+
+    if(Pitch > 89.0f)
+        Pitch = 89.0f;
+    if(Pitch < -89.0f)
+        Pitch = -89.0f;
+    updateCameraVectors();
+        //glm::mat4 view;
+        //view = GetViewMatrix();
+         //view =  glm::rotate( view, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        /*if (delta_rot != 0) {
                 double valor = ((0.8*delta_rot) / 1);
                 if(eixo==1)
                     view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(1.0f, 0.0f, 0.0f) );
@@ -100,8 +133,8 @@ public:
                 else if(eixo==3)
                      view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(0.0f, 0.0f, 1.0f) );
                
-            }
-            return view;
+            }*/
+           // return view;
     }
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
@@ -155,7 +188,10 @@ public:
         // Update Front, Right and Up Vectors using the updated Euler angles
         updateCameraVectors();
     }
+    void bSpline(float t){
+        
 
+    }
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {

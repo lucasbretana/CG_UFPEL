@@ -36,7 +36,7 @@ float lastFrame = 0.0f;
 float distancia = 0.2f;
 float temp = 2.00f;
 float x = 0.0f;
-
+float temps_time=0.0;
 int main()
 {
 	//camera
@@ -101,7 +101,7 @@ int main()
 	models.push_back(rock);
 	models.push_back(cyborg);*/
 		// render loop
-	const double duracao =3.0;
+	const double duracao =5.0;
 	glm::mat4 model;
 	glm::vec3 inicial = glm::vec3(-20.37f,0.0f,-1.0f);
     glm::vec3 einicial = glm::vec3(0.1f, 0.1f, 0.1f);
@@ -114,14 +114,18 @@ int main()
 	glm::mat4 view;
 	bool playAnimationLinear = false;
 	bool playAnimationLinearCam = false;
+	bool playSegueCam = false;
 	bool playRotationCam = false;
 	bool playRotation = false;
+	bool playbazier = false;
 	float radius = 10.0f;
 	float camX = sin(glfwGetTime()) * radius;
 	float camZ = cos(glfwGetTime()) * radius;
 	float valx,valy,valz;
+	float t_aux = 0.0;
 	while (!glfwWindowShouldClose(window))
 	{
+		temps_time = glfwGetTime();
 		view = cameras[cameraCorrente].GetViewMatrix();
 		ourModel.calculoDelta();
 		//models[modelcorrent].calculoDelta();
@@ -142,19 +146,8 @@ int main()
 				++modelcorrent;
 		}*/
 		//adicionaobjeto
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f){
-			 ourModel.adicionaObjeto();
-			
-		}
-
-	
-		//rodar por ponto
-		
-		if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-			glm::vec3 p(-2.5f,1.0f,-2.0f);
-			ourModel.roda(10,inicial,window,ourShader);
-			//models[modelcorrent].roda(10,p,window,ourShader);
-		}
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f)
+			 ourModel.adicionaObjeto(temps_time);
 		//troca de objeto
 		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f)
 			ourModel.trocaObjetoMax();
@@ -165,47 +158,50 @@ int main()
 		//Animação translação
 		if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS){
 			playAnimationLinear = true;
-			first_Time = glfwGetTime();
+			first_Time = temps_time;
 			delta_Time =0.0;
 		}
-		if(playAnimationLinear){
-			if(delta_Time<10){
-				delta_Time = glfwGetTime() - first_Time;
-					ourModel.translat(delta_Time,ourShader,window);		
-			}else{
-				playAnimationLinear = false;
-				delta_Time=0.0;
-			}
-		}
 		// roda em tornoo do ponto 
-		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+
 			glm::vec3 ponto(1.5f,-4.0f, 0.0f);
-			ourModel.rodaemponto(ponto,ourShader,window);
+			ourModel.rodaemponto(ponto,temps_time);
 			//models[modelcorrent].rodaemponto(ponto);
 		}
-		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
-			ourModel.bezier();
+		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){
+			 t_aux = temps_time;
+			 playbazier = true;
+			
+		}
 		//escala
 		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f)
 			ourModel.escala(1.3f,1);
 			//models[modelcorrent].escala(window,ourShader,0.8f,1);
 		if(glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && ourModel.retornaDelta() > 0.5f){
 			playRotation = true;
-			first_Time = glfwGetTime();
+			first_Time = temps_time;
 			delta_Time =0.0;
-		}
-
-			
-			//models[modelcorrent].rodanoeixo(10,window,ourShader,1);
-		if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS ){
-			glm::vec3 aux = ourModel.retornaPositionObj();
-			 std::cout << "ponto: x" << aux.x << "y: " << aux.y << " z: "<< aux.z << std::endl;
 		}	
 
+		if(playAnimationLinear){
+			if(delta_Time<duracao){
+				delta_Time = temps_time - first_Time;
+					ourModel.translat(delta_Time);		
+			}else{
+				playAnimationLinear = false;
+				delta_Time=0.0;
+			}
+		}
+		if(playbazier){
+
+			ourModel.bezier(t_aux,temps_time);
+			
+
+		}
 		if(playRotation){
-			if(delta_Time<10){
-				delta_Time = glfwGetTime() - first_Time;
-					ourModel.rodanoeixo(delta_Time,window,ourShader,1);
+			if(delta_Time<duracao){
+				delta_Time = temps_time - first_Time;
+					ourModel.rodanoeixo(delta_Time,window,ourShader,3);
 			}else{
 				playRotation = false;
 				delta_Time=0.0;
@@ -226,10 +222,13 @@ int main()
 			else
 				cameraCorrente = 0;
 		}
+
+		//segue modelo 
 		if(glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS ){
-			
+			playSegueCam=true;
+			first_Time = temps_time;
+			delta_Time =0.0;
 		}
-		//troca de camera
 		
 		
 		//olhar para o ponto
@@ -238,14 +237,16 @@ int main()
 		//segue modelo não funciona
 		if(glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS ){
 			playAnimationLinearCam=true;
-			first_Time = glfwGetTime();
+			first_Time = temps_time;
 			delta_Time =0.0;
+
+
 		}
 		if(glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS )
 			cameras[cameraCorrente].AnimationCam(10,deltaTime);
 		//ruido simula caminhada
 		if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS){
-				float x =( sin(glfwGetTime()) / 2);
+				float x =( sin(temps_time) / 2);
 				if(x<0)
 					x = -x;
 				cameras[cameraCorrente].Position.y = x;
@@ -256,24 +257,47 @@ int main()
                     view = glm::translate(view,glm::vec3(0.0f,0.0f,1.0f));
 				
 			}
+			if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS  ){
+                    view = cameras[cameraCorrente].rodaEixo(temps_time);
+			}
+			if (glfwGetKey(window, GLFW_KEY_RIGHT ) == GLFW_PRESS ){
+			 // std::cout << "zoom" << std::endl;
+			 cameras[cameraCorrente].bSpline(temps_time);
+		}
+			//zoom 
+		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS ){
+			 // std::cout << "zoom" << std::endl;
+			 cameras[cameraCorrente].aumentaZoom();
+		}
+		if (glfwGetKey(window, GLFW_KEY_INSERT) == GLFW_PRESS ){
+			 // std::cout << "zoom" << std::endl;
+			 cameras[cameraCorrente].diminuiZoom();
+		}
+
 		//segue modelo 
+		if(playSegueCam){
+				if(delta_Time<duracao+2){
+					delta_Time = temps_time - first_Time;
+			 		view =  cameras[cameraCorrente].segue(ourModel.retornaPositionObj());
+			 	}else{
+				playSegueCam = false;
+				delta_Time=0.0;
+			}
+		}
+		//camera anda para a esquerda linear
 		if(playAnimationLinearCam){
-				if(delta_Time<2){
-					delta_Time = glfwGetTime() - first_Time;
-			 		cameras[cameraCorrente].acompanha(ourModel.retornaPositionObj(),delta_Time);
+				if(delta_Time<duracao+2){
+					delta_Time = temps_time - first_Time;
+			 		 cameras[cameraCorrente].linearAnimation(ourModel.retornaPositionObj(),delta_Time);
 			 	}else{
 				playAnimationLinearCam = false;
 				delta_Time=0.0;
 			}
 		}
-
-		
-
-		
 			 
 		// per-frame time logic
 		// --------------------
-		float currentFrame = glfwGetTime();
+		float currentFrame = temps_time;
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
@@ -289,7 +313,7 @@ int main()
 		ourShader.use();
 
 		
-		float radius = 10.0f;
+		float radius = 5.0f;
 		float camX = sin(glfwGetTime()) * radius;
 		float camZ = cos(glfwGetTime()) * radius;
 		/* roda em torno do eixo x,y,z
@@ -298,8 +322,11 @@ int main()
 		valz = cameras[cameraCorrente].Position.z;
 		*/
 		//roda em ponto talvez
-		if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS)
-			view = glm::lookAt(glm::vec3(camX, 0.0 , camZ) , glm::vec3(0.0, 0.0,0.0), glm::vec3(0.0, 1.0,0.0));
+		//if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS)
+		//	view = glm::lookAt(glm::vec3(camX, 0.0 , camZ) , inicial , glm::vec3(0.0, 1.0,0.0));
+		//roda em ponto talvez
+		//if(glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS )
+		//	cameras[cameraCorrente].rodaEixo();
 		
 		/*if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
 			view = glm::lookAt(glm::vec3(valx, camX, valz), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0,0.0));
@@ -358,7 +385,7 @@ void processInput(GLFWwindow *window)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and 
-	// height will be significantly larger than specified on retina displays.
+	// height will be significanrodaEixotly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
 }
 
