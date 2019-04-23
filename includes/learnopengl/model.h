@@ -47,7 +47,8 @@ public:
     double current_t = 0.0;
     double  delta_rot =0.0;
     float bezi =0.0f;
-    
+    float aux =0.0f;
+    float valores = 0.0f;
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
@@ -57,18 +58,22 @@ public:
     double retornaDelta(){
         return delta_t;
     }
+    void settempSpline(float t){
+       valores = t/1000;
+    }
     float bezier(float t_aux,float t){
-          float aux = 5/(t - t_aux);   
-        if (aux < 5.0f) {         
+        //   aux = 5/(t - t_aux);   
+         aux = (this->currTime - t_aux) / (t - t_aux);
+        if ( aux < 1.0f) {         
            glm::vec3 b = catmullRom(
-            glm::vec3(2.0f, 1.0f, 0.0f),
+            glm::vec3(2.5f, -3.0f, 0.0f),
                 glm::vec3(0.0f, -0.8f, 0.0f),
-                glm::vec3(2.5f, -2.3f, -1.0f), //final
-                glm::vec3(2.5, 1.2f, -1.0f),aux); //aux
+                glm::vec3(5.0f, -2.3f, -1.0f), //final
+                glm::vec3(3.5, 3.0f, -1.0f),aux); //aux
             objs[objeto_corrente][3][0] = b.x;
             objs[objeto_corrente][3][1] = b.y;
             objs[objeto_corrente][3][2] = b.z;
-           // bezi += 0.01;
+           aux += (valores);
         }
     }
      void rodaemponto(glm::vec3 p,float temp){

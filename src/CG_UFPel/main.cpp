@@ -171,6 +171,7 @@ int main()
 		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){
 			 t_aux = temps_time;
 			 playbazier = true;
+			 ourModel.settempSpline(5);
 			
 		}
 		//escala
@@ -211,10 +212,10 @@ int main()
 		//CAMERA
 		
 		//adicioma camera nova
-		if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+		/*if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
 			Camera cam(glm::vec3(0.0f, 3.0f, 0.0f));
 			cameras.push_back(cam);
-		}
+		}*/
 		//troca camera
 		if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS ){
 			if(cameraCorrente < cameras.size()-1)
@@ -258,12 +259,14 @@ int main()
 				
 			}
 			if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS  ){
-                    view = cameras[cameraCorrente].rodaEixo(temps_time);
+                   cameras[cameraCorrente].rodaEixo(5,temps_time);
+                   view = cameras[cameraCorrente].GetViewMatrix();
 			}
-			if (glfwGetKey(window, GLFW_KEY_RIGHT ) == GLFW_PRESS ){
-			 // std::cout << "zoom" << std::endl;
-			 cameras[cameraCorrente].bSpline(temps_time);
-		}
+			/*
+			if (glfwGetKey(window, GLFW_KEY_1 ) == GLFW_PRESS ){
+				 cameras[cameraCorrente].bSpline();
+				 view =  cameras[cameraCorrente].GetViewMatrix();
+			}*/
 			//zoom 
 		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS ){
 			 // std::cout << "zoom" << std::endl;
@@ -325,9 +328,7 @@ int main()
 		//if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS)
 		//	view = glm::lookAt(glm::vec3(camX, 0.0 , camZ) , inicial , glm::vec3(0.0, 1.0,0.0));
 		//roda em ponto talvez
-		//if(glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS )
-		//	cameras[cameraCorrente].rodaEixo();
-		
+
 		/*if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
 			view = glm::lookAt(glm::vec3(valx, camX, valz), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0,0.0));
 		if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS){

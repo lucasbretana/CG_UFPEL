@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtx/spline.hpp>
 #include <vector>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
@@ -40,6 +40,7 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    float control =0.0f;
 
     // Constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
@@ -63,6 +64,20 @@ public:
         Yaw = yaw;
         Pitch = pitch;
         updateCameraVectors();
+    }
+    void bSpline(){
+         glm::vec3 b;
+        if (control < 1.0f) {         
+            b = catmullRom(
+            glm::vec3(2.0f, 1.0f, 0.0f),
+                glm::vec3(0.0f, -0.8f, 0.0f),
+                glm::vec3(2.5f, -2.3f, -1.0f), //final
+                glm::vec3(2.5, 1.2f, -1.0f),control); //aux
+           control += 0.01;
+        }
+        Position = b;
+       // glm::mat4 view =  GetViewMatrix();
+        //return view;
     }
 
     // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
@@ -111,16 +126,38 @@ public:
         updateCameraVectors();
 
     }
-    glm::mat4 rodaEixo(float t){
+    void rodaEixo(int duracao,float t){
         
-         Yaw   += t;
-    Pitch += t*2;
+        glm::vec3 frontInicial, positionInicial,upInicial;
+        frontInicial = Front;
+        positionInicial = Position;
+        upInicial = Up;
+        float time_atual, delta=0.0;
+         glm::mat4 rotacao;
+         glm::vec4 novaposicao, novofront, novoup;
+         //   delta = glfwGetTime() - t;
+        rotacao = glm::rotate(glm::mat4(1),  glm::radians(90.0f),  glm::vec3(1.0f, 0.0f, 0.0f));
+        novaposicao = glm::vec4(positionInicial, 1);
+        novaposicao = novaposicao * rotacao;
+        novofront = glm::vec4((positionInicial + frontInicial), 1);
+        novofront = novofront * rotacao;
+        novoup = glm::vec4((positionInicial + upInicial), 1);
+        novoup = novoup * rotacao;
 
-    if(Pitch > 89.0f)
-        Pitch = 89.0f;
-    if(Pitch < -89.0f)
-        Pitch = -89.0f;
-    updateCameraVectors();
+         Position = glm::vec3(novaposicao.x, novaposicao.y, novaposicao.z);
+        Front = glm::vec3(novofront.x, novofront.y, novofront.z) - Position;
+        Up = glm::vec3(novoup.x, novoup.y, novoup.z) - Position;
+        //Position = r.InicialPosition;
+
+        updateCameraVectors();
+       //  Yaw   += t;
+   // Pitch += t*2;
+
+   // if(Pitch > 89.0f)
+   //     Pitch = 89.0f;
+   // if(Pitch < -89.0f)
+   //     Pitch = -89.0f;
+   // updateCameraVectors();
         //glm::mat4 view;
         //view = GetViewMatrix();
          //view =  glm::rotate( view, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -188,10 +225,8 @@ public:
         // Update Front, Right and Up Vectors using the updated Euler angles
         updateCameraVectors();
     }
-    void bSpline(float t){
-        
-
-    }
+    
+    
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
