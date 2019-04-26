@@ -1,9 +1,11 @@
 #ifndef MODEL_H
 #define MODEL_H
-
+#include <stdlib.h> 
 #include <glad/glad.h> 
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
 #include <assimp/Importer.hpp>
@@ -13,6 +15,8 @@
 #include <learnopengl/mesh.h>
 #include <learnopengl/shader.h>
 #include <glm/gtx/spline.hpp>
+
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -31,13 +35,17 @@ public:
     vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
+    //vector <glm::mat4> objs;
+    //vector<vector <glm::mat4> > matriX;
+    vector <glm::mat4> matrix;
     vector <glm::mat4> objs;
+    //vector<vector <glm::mat4> > objs(2);
     vector <glm::vec3> transformations;
     glm::vec3 pinicial = glm::vec3(0.0f, 0.0f, 0.0f);
      glm::vec3 patual = pinicial;
     glm::vec3 escalainicial = glm::vec3(0.1f, 0.1f, 0.1f);
     double delta_t=0.6f;
-    float s = 0.0f; //parâmetro da curva análogo ao t da reta
+    float t = 0.0f; //parâmetro da curva análogo ao t da reta
     double first_t = 0.0;
     double atual_t = 0.0; //tempo inicial
     int i=0,j,objeto_corrente=0;
@@ -47,8 +55,12 @@ public:
     double current_t = 0.0;
     double  delta_rot =0.0;
     float bezi =0.0f;
-    float aux =0.0f;
     float valores = 0.0f;
+        float x=-3.0f,y=0.0f,z=0.0f;
+         glm::mat4 escal;
+    // matriX.push_back(glm::mat4(1.0f));
+     int indi1,indi2;
+     glm::quat MyQuaternion;
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
@@ -61,34 +73,78 @@ public:
     void settempSpline(float t){
        valores = t/1000;
     }
-    float bezier(float t_aux,float t){
-        //   aux = 5/(t - t_aux);   
-         aux = (this->currTime - t_aux) / (t - t_aux);
-        if ( aux < 1.0f) {         
+        glm::vec3 retornaPositionObj(){
+        return glm::vec3(objs[objeto_corrente][3][0],objs[objeto_corrente][3][1],objs[objeto_corrente][3][2]);
+    }
+    void b(){
+                
            glm::vec3 b = catmullRom(
             glm::vec3(2.5f, -3.0f, 0.0f),
                 glm::vec3(0.0f, -0.8f, 0.0f),
                 glm::vec3(5.0f, -2.3f, -1.0f), //final
-                glm::vec3(3.5, 3.0f, -1.0f),aux); //aux
-            objs[objeto_corrente][3][0] = b.x;
+                glm::vec3(3.5, 3.0f, -1.0f),t); //aux
+            objs[objeto_corrente][0][3] = b.x;
             objs[objeto_corrente][3][1] = b.y;
             objs[objeto_corrente][3][2] = b.z;
-           aux += (valores);
-        }
+           t+= (valores);
+        
     }
-     void rodaemponto(glm::vec3 p,float temp){
-        glm::mat4 m1,m2;
-        glm::vec3 posi = retornaPositionObj();
-         glm::vec3 direct = glm::normalize( p - posi);
-        objs[objeto_corrente] =   glm::translate( objs[objeto_corrente],p);
-         objs[objeto_corrente] =  glm::rotate( objs[objeto_corrente], glm::radians(360.0f)*temp, glm::vec3(1.0f, 0.0f, 0.0f));
-         objs[objeto_corrente] =  glm::rotate( objs[objeto_corrente], glm::radians(360.0f)*temp, glm::vec3(0.0f, 1.0f, 0.0f));
-         objs[objeto_corrente] =  glm::rotate( objs[objeto_corrente], glm::radians(360.0f)*temp, glm::vec3(0.0f, 0.0f, 1.0f));
-         objs[objeto_corrente] =  glm::translate( objs[objeto_corrente],- direct);
-        // objs[objeto_corrente]  = glm::rotate(objs[objeto_corrente] , glm::radians(360.0f) * temp, glm::vec3(-1.0f, -1.0f, -1.0f));
+    void setvalor(float valor){
+        valores = valor;
+    }
+    void zerat(){
+        t=0.0f;
+    }
+    void bezier( ){
+        glm::vec3 a(2.5f, -3.0f, 0.0f),
+                b(0.0f, 0.0f, 0.0f),
+                c(5.0f, -2.3f, -1.0f), //final
+                d(3.5, 3.0f, -1.0f);
+           if(t<=1.0f){
+                glm::vec3 ponto =(float)pow(1-t, 3) * a + 
+                    3 * (float)pow(1-t, 2) * t * b +
+                    3 * (1-t) * (float)pow(t, 2) * c +
+                    (float)pow(t, 3) * d;
+                    objs[objeto_corrente][3][0]= ponto.x;
+                    objs[objeto_corrente][3][1]= ponto.y;
+                    objs[objeto_corrente][3][2] = ponto.z;
+                    t+=valores;
+           }
           
+
+    }   
+     void rodaemponto(glm::vec3 p,float temp){
+
+        glm::vec3 posi = retornaPositionObj();
+
+       //a (a⋅v) + cos (α) (v − a (a⋅v)) + sin (α) ⋅ (a × v)
+        //
+       // glm::vec3 v = glm::vec3(10.0f,0.0f,10.0f);
+        //glm::vec3 k = glm::vec3(0.0f,0.0f,1.0f);
+       // glm::vec3
+        //glm::vec3 rot = 
+       // glm::vec3 rot = p * cos(45.0f) + (k*p)*sin(45.0f) + k* (k*p)*(1 - cos(45.0f));
+        //objs[objeto_corrente] =   glm::translate( objs[objeto_corrente],v);
+
+    
+      //  glm::vec3 EulerAngles(45.0f, 45.0f, 0.0f);
+        //glm::vec3 rotated_point = posi + ( EulerAngles * ( p - posi ));
+        //glm::vec3 convert = glm::radius(EulerAngles);
+        // m_rotation = Quaternion.FromAxisAngle(p, radians) * m_rotation;  
+       // MyQuaternion = glm::quat(EulerAngles);
+        // MyQuaternion =  glm::gtx::quaternion::angleAxis((10.0f), posi);
+        //glm::vec3 rotated_point = posi + ( EulerAngles * ( p - posi ));
+       // MyQuaternion =  glm::angleAxis((45.0f), rotated_point);
+   //  glm::mat4 RotationMatrix = glm::toMat4(MyQuaternion);
+   //  objs[objeto_corrente] = objs[objeto_corrente] * RotationMatrix * escal ;
+        float radius = 10.0f;
+         float camX = (sin(temp)*radius);
+        float camZ = cos(temp) * radius;
+          objs[objeto_corrente][3][0]= camX;
+          objs[objeto_corrente][3][1]= p.y;
+          objs[objeto_corrente][3][2] = camZ;
      }
-    void rodanoeixo(int delta_rot,GLFWwindow* window,Shader ourshader,int eixo){
+    void rodanoeixo(int delta_rot,int eixo){
             if (delta_rot != 0) {
                 float valor = (float)((0.8*2) / 2);
                 if(eixo==1)
@@ -110,11 +166,13 @@ public:
     void adicionaObjeto(float t){
         atual_t= t;
                 delta_t =0.0f;
-                pinicial = glm::vec3(s, -8.00f, 0.0f);
-                pinicial.x=s;
+                pinicial = glm::vec3(x,y, z);
                 objs.push_back( glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f)), pinicial));
+                matrix.push_back(glm::mat4(1.0f));
+                 escal = glm::scale(escal, glm::vec3(0.1, 0.1, 0.1));  
                 //transformations.push_back( pinicial);
-                 s +=2;
+                x += 0.8f;
+                y+=0.8f;
                 ++i;
     }
      glm::mat4 translacao(glm::mat4 model,glm::vec3 patual){
@@ -131,9 +189,7 @@ public:
                     
                 }
     }
-    glm::vec3 retornaPositionObj(){
-        return glm::vec3(objs[objeto_corrente][3][0],objs[objeto_corrente][3][1],objs[objeto_corrente][3][2]);
-    }
+
    glm::vec3 calculoponto(){
     glm::vec3 aux;
     if(objeto_corrente>=0){
@@ -166,16 +222,21 @@ public:
     void rodaobjetoespecifico(){
         objs[objeto_corrente] = glm::rotate(objs[objeto_corrente], glm::radians(1.0f),  glm::vec3(0.0f, 0.f, 1.0f));
     }
+    
     void desenha(Shader ourshader){
         if(i>0){
             for (j=0; j < objs.size(); ++j)
             {
               //  objs[j] = glm::scale(objs[j], glm::vec3(0.1f, 0.1f, 0.1f)); 
                 ourshader.setMat4("model", objs[j]);
+                //ourshader.setMat4("model2",matrix[j]);
                 Draw(ourshader);
 
             }
         }
+    }
+    vector <glm::mat4> retornaMatriz(){
+        return objs;
     }
     // draws the model, and thus all its meshes
     void Draw(Shader shader)

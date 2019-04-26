@@ -106,6 +106,10 @@ public:
         if (Zoom >= 45.0f)
             Zoom = 45.0f;
     }
+    void trocaPosition(glm::vec3 p)
+    {
+        Position = p;
+    }
     void diminuiZoom()
     {
         if (Zoom >= 1.0f && Zoom <= 45.0f)
@@ -126,9 +130,9 @@ public:
         updateCameraVectors();
 
     }
-    void rodaEixo(int duracao,float t){
+    void rodaEixo(float t){
         
-        glm::vec3 frontInicial, positionInicial,upInicial;
+       /* glm::vec3 frontInicial, positionInicial,upInicial;
         frontInicial = Front;
         positionInicial = Position;
         upInicial = Up;
@@ -149,29 +153,24 @@ public:
         Up = glm::vec3(novoup.x, novoup.y, novoup.z) - Position;
         //Position = r.InicialPosition;
 
-        updateCameraVectors();
+        updateCameraVectors();*/
        //  Yaw   += t;
    // Pitch += t*2;
 
-   // if(Pitch > 89.0f)
-   //     Pitch = 89.0f;
-   // if(Pitch < -89.0f)
-   //     Pitch = -89.0f;
-   // updateCameraVectors();
-        //glm::mat4 view;
-        //view = GetViewMatrix();
-         //view =  glm::rotate( view, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        /*if (delta_rot != 0) {
-                double valor = ((0.8*delta_rot) / 1);
-                if(eixo==1)
-                    view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(1.0f, 0.0f, 0.0f) );
-                else if(eixo==2)
-                   view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(0.0f, 1.0f, 0.0f) );
-                else if(eixo==3)
-                     view = glm::rotate(view,  glm::radians((float)valor),  glm::vec3(0.0f, 0.0f, 1.0f) );
-               
-            }*/
-           // return view;
+    float radius = 10.0f;
+         float camX = (sin(t)*radius);
+        //float camZ = cos(temp) * radius;
+         //float camY =  sin(glm::radians(0.0f));
+          Position.x = camX;
+          //Front.x = camX;
+    }
+    glm::mat4 rodaemponto(float temp, glm::vec3 p){
+         float radius = 10.0f;
+         float camX = (sin(temp)*radius);
+        float camZ = cos(temp) * radius;
+        glm::mat4 view = glm::lookAt(glm::vec3(camX,0.0f,camZ), p,Up);
+        return view;
+
     }
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
